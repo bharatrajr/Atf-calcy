@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ATF Customs Duty Calculator</title>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1c2536">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ATF Duty">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div id="atf-calculator" class="atf-container light">
+  <div class="atf-topband"></div>
+  <div class="atf-header">
+    <div>
+      <h1>ATF Duty Calculator</h1>
+      <div class="subtitle">Aviation turbine fuel &middot; customs assessment</div>
+    </div>
+    <div class="atf-toggles">
+      <div class="toggle-row">
+        <span class="label-text">Dark</span>
+        <label class="switch"><input type="checkbox" id="darkMode"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="label-text">Round</span>
+        <label class="switch"><input type="checkbox" id="roundToggle" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">FUEL QUANTITY</p>
+    <div class="two-col">
+      <div class="field">
+        <label>Closing <span class="unit">KGS</span></label>
+        <input type="number" id="closing" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Opening <span class="unit">KGS</span></label>
+        <input type="number" id="opening" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Density</label>
+        <input type="number" id="density" value="0.78" step="0.01" inputmode="decimal">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">RATES &middot; REMEMBERED BETWEEN VISITS</p>
+    <div class="field">
+      <label>IOCL Rate <span class="unit">USD / KL</span></label>
+      <input type="number" id="rate" inputmode="decimal">
+      <div class="remembered" id="rateRemembered">
+        <span>Using last saved rate</span><button type="button" data-clear="rate">clear</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Exchange Rate <span class="unit">USD &rarr; INR</span></label>
+      <input type="number" id="exchange" inputmode="decimal">
+      <div class="remembered" id="exchangeRemembered">
+        <span>Using last saved rate</span><button type="button" data-clear="exchange">clear</button>
+      </div>
+    </div>
+    <div class="toggle-line">
+      <span>Insurance applied?</span>
+      <label class="switch"><input type="checkbox" id="insurance"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">DUTY COMPONENTS</p>
+    <div class="two-col">
+      <div class="field"><label>BCD <span class="unit">%</span></label><input type="number" id="bcd" value="5" inputmode="decimal"></div>
+      <div class="field"><label>CVD <span class="unit">%</span></label><input type="number" id="cvd" value="11" inputmode="decimal"></div>
+      <div class="field"><label>SWS <span class="unit">%</span></label><input type="number" id="sws" value="10" inputmode="decimal"></div>
+    </div>
+  </div>
+
+  <div class="section ledger">
+    <p class="section-title">ASSESSABLE VALUE</p>
+    <div class="row"><span>Remnant fuel (L)</span><span id="remnant">—</span></div>
+    <div class="row"><span>Rate of fuel (USD/L)</span><span id="usdL">—</span></div>
+    <div class="row"><span>Assessable value (USD)</span><span id="assessUSD">—</span></div>
+    <div class="row"><span>Insurance adjustment (USD)</span><span id="insAdj">—</span></div>
+    <div class="row"><span>Total assessable value (USD)</span><span id="totalUSD">—</span></div>
+    <div class="row"><span>Total assessable value (INR)</span><span id="totalINR">—</span></div>
+  </div>
+
+  <div class="section ledger">
+    <p class="section-title">CUSTOMS DUTY</p>
+    <div class="row duty"><span>BCD</span><span id="bcdVal">—</span></div>
+    <div class="row duty"><span>CVD</span><span id="cvdVal">—</span></div>
+    <div class="row duty"><span>SWS</span><span id="swsVal">—</span></div>
+    <div class="row total"><span>Total customs duty</span><span id="totalDuty">—</span></div>
+    <div class="row"><span>Insurance applied</span><span id="insStatus">No</span></div>
+  </div>
+
+  <!-- RUNNING BALANCE -->
+  <div class="rb-balance-card">
+    <div class="rb-balance-label">RUNNING BALANCE</div>
+    <div class="rb-balance-amount" id="rb-balance">Not set</div>
+    <div class="rb-hint">Deducts the total customs duty above from this balance. "Reset quantities" also does this automatically.</div>
+    <button class="rb-deduct-now-btn" id="rb-deduct-now-btn">Deduct duty now</button>
+    <div class="rb-set-row">
+      <input type="number" id="rb-set-input" inputmode="decimal" placeholder="Opening balance">
+      <button class="rb-set-btn" id="rb-set-btn">Set / Reset</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">LAST 10 DEDUCTIONS</p>
+    <div id="rb-history-list"><div class="rb-empty">No deductions yet.</div></div>
+  </div>
+
+  <div class="buttons">
+    <button class="primary" onclick="window.print()">Print / Save PDF</button>
+    <button id="downloadExcel">Download CSV</button>
+    <button id="resetForm">Reset quantities</button>
+  </div>
+
+  <div id="printTitle">ATF Customs Duty Report</div>
+  <div id="printFooter"></div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
